@@ -1,0 +1,224 @@
+{
+  "name": "Moonify",
+  "version": "0.1.0",
+  "description": "A browser-based moon planner with a psychedelic vibe. Shows moon phase and elevation in real time or for any chosen date/time; a 24h timeline scrollbar with visible-time highlighting; and a lunar-cycle bar chart of nightly visibility. Autodetects location/timezone with optional map search and lat/lon input.",
+  "license": "MIT",
+  "stack": {
+    "framework": "React",
+    "language": "TypeScript",
+    "bundler": "Vite",
+    "styling": "TailwindCSS",
+    "charts": "Recharts",
+    "time": "Luxon",
+    "mapping": {
+      "map": "Leaflet",
+      "geocoder": "leaflet-geosearch (Nominatim)"
+    },
+    "astronomy": {
+      "primary": "suncalc (positions, illumination, rise/set)",
+      "optional": "astronomy-engine (phase events/new moon boundaries, high-precision)"
+    }
+  },
+  "goals": [
+    "Main view that defaults to today, showing the moon disc and its elevation for the current or selected time.",
+    "If the moon is below the horizon at the selected moment, do not show the disc.",
+    "A 24h timeline scrollbar: ivory-highlight the intervals when the moon is above the horizon; allow scrubbing and play/pause forward/backward.",
+    "Date picker with hotkeys (today, tomorrow).",
+    "Sky backdrop that gradients with time-of-day: night → dawn (pinkish) → noon (blue) → sunset (crimson) → night, smoothly.",
+    "Bar chart for the current lunar cycle showing hours visible per day (bar value), rise–set labels, and a CSS-drawn moon phase icon in ivory over a dark-disc background.",
+    "Location control: autodetect location/timezone by default; allow searching places (free maps autocomplete) or entering lat/long; allow dragging a pin on a map.",
+    "All colors come from a single resource constants module for easy theme changes."
+  ],
+  "non_goals": [
+    "Telescope-grade physical accuracy (refraction, terrain occlusion).",
+    "Account system or server-side persistence."
+  ],
+  "dependencies": {
+    "prod": [
+      "react",
+      "react-dom",
+      "suncalc",
+      "recharts",
+      "framer-motion",
+      "luxon",
+      "leaflet",
+      "leaflet-geosearch"
+    ],
+    "optional": [
+      "astronomy-engine"
+    ],
+    "dev": [
+      "typescript",
+      "vite",
+      "tailwindcss",
+      "postcss",
+      "autoprefixer"
+    ]
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "routes": [
+    { "path": "/", "component": "AppShell" }
+  ],
+  "state": {
+    "location": {
+      "lat": "number",
+      "lon": "number",
+      "tz": "string (IANA, autodetected via Intl or Luxon)",
+      "name": "string | null (reverse geocode result)"
+    },
+    "date": {
+      "selectedISO": "YYYY-MM-DD (local)",
+      "minutes": "0..1439 current time slider value",
+      "playing": "boolean",
+      "playDirection": "\"forward\" | \"backward\""
+    },
+    "astronomy": {
+      "moonPosition": "{ altitudeRad, azimuthRad, distanceKm }",
+      "illumination": "{ fraction0to1, phase0to1 }",
+      "riseSet": "{ rise?: Date, set?: Date, alwaysUp?: boolean, alwaysDown?: boolean }",
+      "visibleIntervalsMinutes": "[{ startMin, endMin }]"
+    },
+    "cycle": {
+      "startUTC": "Date (previous new moon)",
+      "endUTC": "Date (next new moon)",
+      "days": "[{ dateISO, visibleHours, riseLocal, setLocal, phase0to1 }]"
+    },
+    "ui": {
+      "theme": "\"psychedelic\"",
+      "colors": "imported from constants/colors.ts",
+      "errors": "string | null"
+    }
+  },
+  "components": [
+    {
+      "name": "AppShell",
+      "props": [],
+      "children": ["Header", "SkyBackdrop", "MainView", "CycleChart", "Footer"]
+    },
+    {
+      "name": "Header",
+      "description": "Branding (Moonify), datepicker + hotkeys, location control, play controls."
+    },
+    {
+      "name": "LocationControl",
+      "description": "Detects location via Geolocation API, displays map (Leaflet). Search with LeafletGeoSearch (Nominatim). Allows drag-a-pin, manual lat/lon. Updates tz via Intl using that lat/lon where applicable."
+    },
+    {
+      "name": "DatePickerHotkeys",
+      "description": "Calendar date picker with Today/Tomorrow hotkeys + keyboard shortcuts."
+    },
+    {
+      "name": "TimelineScrollbar",
+      "description": "24h scrubber with ivory highlights for above-horizon intervals; supports play forward/backward; scroll-able with wheel/trackpad; keyboard-nudge minutes."
+    },
+    {
+      "name": "MoonDisc",
+      "description": "CSS-rendered disc: dark navy background circle with ivory lit portion based on phase; hides entirely when below horizon."
+    },
+    {
+      "name": "NowPanel",
+      "description": "Shows illumination %, phase name, altitude°, azimuth°, distance km, rise/set times."
+    },
+    {
+      "name": "SkyBackdrop",
+      "description": "Full-bleed gradient that changes by selected time: night (deep navy) → dawn (lavender/pink) → noon (soft blue) → sunset (crimson/orange) → night; smooth interpolation."
+    },
+    {
+      "name": "CycleChart",
+      "description": "Bar chart for the current lunar cycle. Each day’s bar = total hours moon is above horizon (local). Bar labels show rise–set (or '—' when always up/down). Left of bar shows a CSS moon icon (ivory on dark)."
+    },
+    {
+      "name": "Footer",
+      "description": "Source/library attributions and disclaimers."
+    }
+  ],
+  "styles": {
+    "colorTokens": {
+      "ivory": "#FFFFF0",
+      "navy00": "#04050f",
+      "navy10": "#0B1020",
+      "psychedelicPink": "#f6a6c1",
+      "psychedelicPurple": "#9b5de5",
+      "psychedelicTeal": "#00f5d4",
+      "noonBlue": "#7ec8e3",
+      "sunsetCrimson": "#e63946",
+      "sunsetOrange": "#ff8c42",
+      "dawnLavender": "#b8a1ff",
+      "dawnRose": "#ffc0cb",
+      "highlightIvory": "#fffae5",
+      "gridLine": "rgba(255, 255, 240, 0.2)",
+      "textPrimary": "#F1F5F9",
+      "textMuted": "#B6C2CF"
+    },
+    "shadows": {
+      "discGlow": "0 0 40px rgba(255,255,240,0.25) inset, 0 0 30px rgba(255,255,240,0.15)"
+    }
+  },
+  "keyboardShortcuts": [
+    { "keys": ["t"], "action": "Jump to Today" },
+    { "keys": ["y"], "action": "Jump to Tomorrow" },
+    { "keys": ["space"], "action": "Play/Pause timeline" },
+    { "keys": ["shift", "space"], "action": "Toggle play direction" },
+    { "keys": ["arrowleft"], "action": "−5 minutes" },
+    { "keys": ["arrowright"], "action": "+5 minutes" },
+    { "keys": ["shift", "arrowleft"], "action": "−30 minutes" },
+    { "keys": ["shift", "arrowright"], "action": "+30 minutes" },
+    { "keys": ["home"], "action": "Go to next rise (or start of first visible interval)" },
+    { "keys": ["end"], "action": "Go to next set (or end of last visible interval)" },
+    { "keys": ["mod", "k"], "action": "Open location search" }
+  ],
+  "algorithms": {
+    "positionAndIllumination": "Use SunCalc.getMoonPosition(date, lat, lon) and SunCalc.getMoonIllumination(date). Altitude>0 => visible.",
+    "riseSet": "Use SunCalc.getMoonTimes(localMidnight, lat, lon, inUTC=false). Handle alwaysUp/alwaysDown flags. For timeline, sample each minute (or 2–5 min) and group contiguous visible minutes into intervals; refine edges with binary search to find horizon crossing times.",
+    "cycleRange": "Preferred: astronomy-engine SearchMoonPhase(0) for previous/next New Moon (phase=0°). Fallback: scan +/- 20 days around selected date minimizing illumination fraction.",
+    "visibleHoursPerDay": "For each civil day between cycle start and end (local), sum duration of intervals where altitude>0; label with rise–set in local time. Some days may have two intervals or none; handle wrap across midnight.",
+    "moonDiscCSS": "Draw a dark circle for the disc (navy). Overlay an ivory shape using CSS mask/clip to simulate waxing/waning. Flip direction based on phase <=0.5 (waxing) vs >0.5 (waning).",
+    "skyGradient": "Map minute-of-day to gradient stops: night [00:00–04:00] navy, dawn [~before sunrise] lavender→rose, noon [~11:00–15:00] blue, sunset [~before sunset] crimson→orange, night [~after civil dusk] navy. Interpolate smoothly by cosine or cubic easing.",
+    "timezone": "Use Intl.DateTimeFormat().resolvedOptions().timeZone; format with Luxon. All calculations done in local time unless otherwise required."
+  },
+  "acceptanceCriteria": [
+    "Selecting a date and scrubbing the timeline updates the moon disc and altitude in real-time without page reloads.",
+    "When the moon is below the horizon at the selected minute, the disc is hidden and the ivory highlight is not shown for that minute.",
+    "The timeline shows ivory highlights exactly over above-horizon intervals for that day; play moves the thumb through time and loops at 24h.",
+    "Hotkeys 't' and 'y' jump to today/tomorrow; space toggles play; shift+space flips direction.",
+    "Cycle chart renders ~29–30 bars with correct visible-hours heights and labels for rise–set each day (or em-dash if none).",
+    "Autodetect location on first load (with permission). Location search finds a place and updates results; dragging the pin updates lat/lon.",
+    "All color values are imported from constants; no hard-coded hex values in components."
+  ],
+  "a11y": {
+    "contrast": "Minimum 4.5:1 for text; ivory highlights remain visible against all backgrounds.",
+    "keyboard": "All controls reachable via Tab; focus outlines visible; shortcuts documented.",
+    "aria": "Aria-live regions for permission errors or geocode failures."
+  },
+  "telemetry": {
+    "enabled": false,
+    "notes": "No tracking by default. If added later, use privacy-friendly analytics and allow opting out."
+  },
+  "files": {
+    "constants": [
+      "src/constants/colors.ts"
+    ],
+    "app": [
+      "src/App.tsx",
+      "src/main.tsx",
+      "src/components/*",
+      "src/lib/astro.ts"
+    ]
+  },
+  "tasks": [
+    { "id": "setup", "title": "Scaffold Vite + React + TS + Tailwind", "done": false },
+    { "id": "colors", "title": "Implement color tokens in constants/colors.ts", "done": false },
+    { "id": "astro", "title": "Implement astro.ts helpers (SunCalc wrappers + Astronomy Engine fallback)", "done": false },
+    { "id": "timeline", "title": "Build TimelineScrollbar with ivory visible intervals + play/pause", "done": false },
+    { "id": "moon-disc", "title": "Build MoonDisc CSS rendering with phase-based mask", "done": false },
+    { "id": "sky", "title": "Implement SkyBackdrop gradient interpolation", "done": false },
+    { "id": "cycle-chart", "title": "Build CycleChart with bars, labels, and phase icons", "done": false },
+    { "id": "location", "title": "LocationControl with geolocation + Leaflet + Nominatim search + draggable marker", "done": false },
+    { "id": "a11y", "title": "Keyboard shortcuts, focus, ARIA", "done": false },
+    { "id": "readme", "title": "Write README with run/deploy instructions", "done": false }
+  ]
+}
