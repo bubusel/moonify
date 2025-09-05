@@ -1,5 +1,8 @@
 export const colors = {
   ivory: '#FFFFF0',
+  moonYellow: '#F6D365',
+  moonIvory: '#FFFDF3',
+  moonSnow: '#FFFAFA',
   navy00: '#04050f',
   navy10: '#0B1020',
   psychedelicPink: '#f6a6c1',

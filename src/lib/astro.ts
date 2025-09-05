@@ -14,3 +14,25 @@ export function getMoonTimes(date: Date, lat: number, lon: number) {
 export function minutesSinceMidnight(date: DateTime) {
   return date.hour * 60 + date.minute;
 }
+
+export function toCompass(azDeg: number) {
+  const dirs = [
+    'N',
+    'NNE',
+    'NE',
+    'ENE',
+    'E',
+    'ESE',
+    'SE',
+    'SSE',
+    'S',
+    'SSW',
+    'SW',
+    'WSW',
+    'W',
+    'WNW',
+    'NW',
+    'NNW',
+  ];
+  return dirs[Math.round(((azDeg % 360) + 360) % 360 / 22.5) % 16];
+}
