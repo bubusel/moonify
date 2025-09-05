@@ -19,8 +19,9 @@ const LocationControl: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex items-center space-x-2">
+    <div id="location-control" className="flex items-center space-x-2">
       <input
+        id="latitude-input"
         aria-label="Latitude"
         value={lat}
         onChange={e => setLat(e.target.value)}
@@ -28,13 +29,14 @@ const LocationControl: React.FC = () => {
         style={{ background: colors.navy00, color: colors.textPrimary }}
       />
       <input
+        id="longitude-input"
         aria-label="Longitude"
         value={lon}
         onChange={e => setLon(e.target.value)}
         className="w-20 px-2 py-1 rounded"
         style={{ background: colors.navy00, color: colors.textPrimary }}
       />
-      <div aria-live="polite" style={{ color: colors.sunsetCrimson }}>{error}</div>
+      <div id="location-error" aria-live="polite" style={{ color: colors.sunsetCrimson }}>{error}</div>
     </div>
   );
 };

@@ -5,3 +5,11 @@
 body {
   @apply bg-navy00 text-textPrimary;
 }
+
+input[type='date'] {
+  color-scheme: dark;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

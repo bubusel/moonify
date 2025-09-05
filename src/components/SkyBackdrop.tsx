@@ -8,6 +8,7 @@ interface Props {
 const SkyBackdrop: React.FC<Props> = ({ minute }) => {
   return (
     <div
+      id="sky-backdrop"
       className="absolute inset-0 -z-10 transition-colors duration-500"
       style={{ background: skyGradient(minute) }}
     />
