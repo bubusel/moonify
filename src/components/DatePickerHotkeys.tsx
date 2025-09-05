@@ -1,34 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { DateTime } from 'luxon';
 import { colors } from '../constants/colors';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
-const DatePickerHotkeys: React.FC = () => {
-  const [date, setDate] = useState(DateTime.now().toISODate());
+interface Props {
+  date: string;
+  onChange: (d: string) => void;
+}
 
+const DatePickerHotkeys: React.FC<Props> = ({ date, onChange }) => {
   useKeyboardShortcuts([
-    { keys: ['t'], handler: () => setDate(DateTime.now().toISODate()) },
-    { keys: ['y'], handler: () => setDate(DateTime.now().plus({ days: 1 }).toISODate()) }
+    { keys: ['t'], handler: () => onChange(DateTime.now().toISODate()) },
+    { keys: ['y'], handler: () => onChange(DateTime.now().plus({ days: 1 }).toISODate()) }
   ]);
 
   return (
-    <div className="flex items-center space-x-2">
+    <div id="date-picker" className="flex items-center space-x-2">
       <input
+        id="date-input"
         type="date"
         value={date}
-        onChange={e => setDate(e.target.value)}
+        onChange={e => onChange(e.target.value)}
         className="bg-navy00 text-textPrimary rounded px-2 py-1"
-        style={{ background: colors.navy00, color: colors.textPrimary }}
+        style={{ background: colors.navy00, color: colors.textPrimary, colorScheme: 'dark' }}
       />
       <button
+        id="btn-today"
         className="px-2 py-1 rounded"
         style={{ background: colors.navy00, color: colors.ivory }}
-        onClick={() => setDate(DateTime.now().toISODate())}
+        onClick={() => onChange(DateTime.now().toISODate())}
       >Today</button>
       <button
+        id="btn-tomorrow"
         className="px-2 py-1 rounded"
         style={{ background: colors.navy00, color: colors.ivory }}
-        onClick={() => setDate(DateTime.now().plus({ days: 1 }).toISODate())}
+        onClick={() => onChange(DateTime.now().plus({ days: 1 }).toISODate())}
       >Tomorrow</button>
     </div>
   );
