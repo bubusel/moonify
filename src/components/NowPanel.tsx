@@ -157,11 +157,11 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
   const moonColor = hslToString(colorHsl);
 
   return (
-    <div id="now-panel" className="flex flex-col items-center space-y-2 w-3/5">
+    <div id="now-panel" className="flex flex-col items-center space-y-2 w-[80vw] h-[50vh]">
       <div
         id="moon-canvas"
         ref={canvasRef}
-        className="relative w-full h-48 overflow-hidden"
+        className="relative w-full h-full overflow-hidden"
       >
         <svg className="absolute inset-0 w-full h-full" fill="none">
           <path d={pathData} stroke={colors.gridLine} strokeWidth={1} />
@@ -178,7 +178,7 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
           clipDeg={clipDeg}
         />
       </div>
-      <div id="moon-info" className="relative w-full" style={{ color: colors.textMuted }}>
+      <div id="moon-info" className="relative w-full text-textMuted">
         <div
           className="absolute text-xs"
           style={{ left: `${xAt(tRise)}px`, top: 0, transform: 'translateX(-50%)' }}
