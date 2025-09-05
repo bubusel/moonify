@@ -13,3 +13,7 @@ input[type='date'] {
 input[type='date']::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+
+#main-content > * {
+  margin: 20px;
+}
