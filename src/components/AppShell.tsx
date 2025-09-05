@@ -28,10 +28,16 @@ const AppShell: React.FC = () => {
         >
           <NowPanel date={dateStr} minute={minute} />
         </div>
-        <div style={{ height: '10vh' }} className="flex items-center justify-center w-full">
+        <div
+          style={{ height: '10vh', background: colors.navy00 }}
+          className="flex items-center justify-center w-full"
+        >
           <TimelineScrollbar dateTime={dateTime} onChange={setDateTime} />
         </div>
-        <div style={{ height: '10vh' }} className="flex items-center justify-center w-full">
+        <div
+          style={{ height: '10vh', background: colors.navy00 }}
+          className="flex items-center justify-center w-full"
+        >
           <DatePickerHotkeys dateTime={dateTime} onChange={setDateTime} />
         </div>
       </div>
