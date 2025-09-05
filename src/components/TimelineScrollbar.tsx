@@ -41,6 +41,8 @@ const TimelineScrollbar: React.FC<Props> = ({ dateTime, onChange }) => {
   const minute = dateTime.hour * 60 + dateTime.minute;
   const date = dateTime.toISODate();
 
+  const [offset, setOffset] = React.useState(0);
+
   const toPct = (min: number) => (min / 1440) * 100;
 
   useKeyboardShortcuts([
@@ -61,17 +63,27 @@ const TimelineScrollbar: React.FC<Props> = ({ dateTime, onChange }) => {
   const setLabel = set !== null ? format(date, set) : null;
 
   const animateMove = (diff: number) => {
-    const start = dateTime;
+    const startDate = dateTime;
+    const startOffset = offset;
     animate(0, 1, {
       duration: 0.18,
       ease: 'easeOut',
-      onUpdate: (t) => onChange(start.plus({ minutes: diff * t })),
-      onComplete: () => onChange(start.plus({ minutes: diff }).startOf('minute')),
+      onUpdate: (t) => {
+        onChange(startDate.plus({ minutes: diff * t }));
+        setOffset(startOffset + diff * t);
+      },
+      onComplete: () => {
+        onChange(startDate.plus({ minutes: diff }).startOf('minute'));
+        setOffset(startOffset + diff);
+      },
     });
   };
 
   const handleRange = (m: number) => {
-    const d = dateTime.startOf('day').plus({ minutes: m, seconds: dateTime.second });
+    const newMinute = Math.round(m + offset);
+    const d = dateTime
+      .startOf('day')
+      .plus({ minutes: newMinute, seconds: dateTime.second });
     onChange(d);
   };
 
@@ -98,52 +110,63 @@ const TimelineScrollbar: React.FC<Props> = ({ dateTime, onChange }) => {
       >
         &laquo;
       </button>
-      <div className="relative flex-1 h-full overflow-x-auto overflow-y-hidden">
-        <TimelineRange minute={minute} onChange={handleRange} />
-        <div id="timeline-ruler" className="absolute left-0 top-[40%] h-[30%] w-full">
-          {ranges.map((r, idx) => (
+      <div className="relative flex-1 h-full overflow-hidden">
+        <TimelineRange minute={Math.round(minute - offset)} onChange={handleRange} />
+        <div
+          className="absolute inset-0 w-[200%]"
+          style={{ transform: `translateX(-${toPct((offset % 1440 + 1440) % 1440)}%)` }}
+        >
+          <div id="timeline-ruler" className="absolute left-0 top-[40%] h-[30%] w-full">
+            {ranges
+              .flatMap((r) => [r, { start: r.start + 100, dur: r.dur }])
+              .map((r, idx) => (
+                <div
+                  key={idx}
+                  className="absolute h-full bg-highlightIvory/30"
+                  style={{ left: `${r.start}%`, width: `${r.dur}%` }}
+                />
+              ))}
             <div
-              key={idx}
-              className="absolute h-full bg-highlightIvory/30"
-              style={{ left: `${r.start}%`, width: `${r.dur}%` }}
-            />
-          ))}
-          <div className="grid grid-cols-24 items-end h-full">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-start">
-                <div className="w-px h-2 bg-gridLine" />
-                <div className="text-xs text-textMuted -translate-x-1/2">
-                  {String(i).padStart(2, '0')}:00
+              className="grid items-end h-full"
+              style={{ gridTemplateColumns: 'repeat(48, minmax(0, 1fr))' }}
+            >
+              {Array.from({ length: 48 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-start">
+                  <div className="w-px h-2 bg-gridLine" />
+                  <div className="text-xs text-textMuted -translate-x-1/2">
+                    {String(i % 24).padStart(2, '0')}:00
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div id="timeline-markers" className="absolute left-0 top-[70%] w-full">
+            {[
+              ...(risePct !== null && riseLabel
+                ? [
+                    { pct: risePct, label: riseLabel, icon: '↑' },
+                    { pct: risePct + 100, label: riseLabel, icon: '↑' },
+                  ]
+                : []),
+              ...(setPct !== null && setLabel
+                ? [
+                    { pct: setPct, label: setLabel, icon: '↓' },
+                    { pct: setPct + 100, label: setLabel, icon: '↓' },
+                  ]
+                : []),
+            ].map((m, idx) => (
+              <div
+                key={idx}
+                className="absolute -translate-x-1/2 flex flex-col items-center text-textPrimary"
+                style={{ left: `${m.pct}%` }}
+              >
+                <div className="text-2xl">{m.icon}</div>
+                <div className="text-xs" data-time>
+                  {m.label}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-        <div id="timeline-markers" className="absolute left-0 top-[70%] w-full">
-          {risePct !== null && riseLabel && (
-            <div
-              id="rise-marker"
-              className="absolute -translate-x-1/2 flex flex-col items-center text-textPrimary"
-              style={{ left: `${risePct}%` }}
-            >
-              <div className="text-2xl">↑</div>
-              <div className="text-xs" data-time>
-                {riseLabel}
-              </div>
-            </div>
-          )}
-          {setPct !== null && setLabel && (
-            <div
-              id="set-marker"
-              className="absolute -translate-x-1/2 flex flex-col items-center text-textPrimary"
-              style={{ left: `${setPct}%` }}
-            >
-              <div className="text-2xl">↓</div>
-              <div className="text-xs" data-time>
-                {setLabel}
-              </div>
-            </div>
-          )}
         </div>
       </div>
       <button
