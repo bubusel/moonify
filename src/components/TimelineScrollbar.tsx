@@ -1,13 +1,13 @@
 import React from 'react';
 import { DateTime } from 'luxon';
+import { animate } from 'framer-motion';
 import { colors } from '../constants/colors';
 import { getMoonTimes, minutesSinceMidnight } from '../lib/astro';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 interface Props {
-  date: string;
-  minute: number;
-  onChange: (m: number) => void;
+  dateTime: DateTime;
+  onChange: (d: DateTime) => void;
 }
 
 const TimelineRange: React.FC<{ minute: number; onChange: (m: number) => void }> = ({ minute, onChange }) => {
@@ -39,12 +39,15 @@ function format(date: string, minute: number) {
     .toFormat('HH:mm:ss');
 }
 
-const TimelineScrollbar: React.FC<Props> = ({ date, minute, onChange }) => {
+const TimelineScrollbar: React.FC<Props> = ({ dateTime, onChange }) => {
+  const minute = dateTime.hour * 60 + dateTime.minute;
+  const date = dateTime.toISODate();
+
   useKeyboardShortcuts([
-    { keys: ['arrowleft'], handler: () => onChange(Math.max(0, minute - 5)) },
-    { keys: ['arrowright'], handler: () => onChange(Math.min(1439, minute + 5)) },
-    { keys: ['shift', 'arrowleft'], handler: () => onChange(Math.max(0, minute - 30)) },
-    { keys: ['shift', 'arrowright'], handler: () => onChange(Math.min(1439, minute + 30)) }
+    { keys: ['arrowleft'], handler: () => onChange(dateTime.minus({ minutes: 5 })) },
+    { keys: ['arrowright'], handler: () => onChange(dateTime.plus({ minutes: 5 })) },
+    { keys: ['shift', 'arrowleft'], handler: () => onChange(dateTime.minus({ minutes: 30 })) },
+    { keys: ['shift', 'arrowright'], handler: () => onChange(dateTime.plus({ minutes: 30 })) }
   ]);
 
   const times = getMoonTimes(DateTime.fromISO(date).toJSDate(), 0, 0);
@@ -62,22 +65,41 @@ const TimelineScrollbar: React.FC<Props> = ({ date, minute, onChange }) => {
   const riseLabel = rise !== null ? format(date, rise) : null;
   const setLabel = set !== null ? format(date, set) : null;
 
+  const animateMove = (diff: number) => {
+    const start = dateTime;
+    animate(0, 1, {
+      duration: 0.18,
+      ease: 'easeOut',
+      onUpdate: (t) => onChange(start.plus({ minutes: diff * t })),
+      onComplete: () => onChange(start.plus({ minutes: diff }).startOf('minute')),
+    });
+  };
+
+  const handleRange = (m: number) => {
+    const d = dateTime.startOf('day').plus({ minutes: m, seconds: dateTime.second });
+    onChange(d);
+  };
+
   return (
-    <div id="timeline" className="flex items-center space-x-2">
+    <div id="timeline" className="flex items-center space-x-2 h-full">
       <button
         id="timeline-prev"
         className="px-2 py-1 rounded"
         style={{ background: colors.navy00, color: colors.ivory }}
-        onClick={() => onChange((minute + 1440 - 720) % 1440)}
+        onClick={() => animateMove(-180)}
       >
         &lt;&lt;
       </button>
-      <div className="relative flex-1 h-16">
-        <TimelineRange minute={minute} onChange={onChange} />
-        <div id="selected-time-label" className="absolute -top-5 text-xs" style={{ left: `${handleLeft}%`, transform: 'translateX(-50%)', color: colors.ivory }}>
+      <div className="relative flex-1 h-full">
+        <TimelineRange minute={minute} onChange={handleRange} />
+        <div
+          id="selected-time-label"
+          className="absolute text-xs"
+          style={{ top: 0, left: `${handleLeft}%`, transform: 'translateX(-50%)', color: colors.ivory }}
+        >
           {selectedLabel}
         </div>
-        <div id="timeline-ruler" className="absolute bottom-0 left-0 right-0 h-8">
+        <div id="timeline-ruler" className="absolute left-0 right-0" style={{ top: '40%', height: '30%' }}>
           {highlightWidth !== null && riseLeft !== null && (
             <div
               id="moon-visible-range"
@@ -86,7 +108,7 @@ const TimelineScrollbar: React.FC<Props> = ({ date, minute, onChange }) => {
                 left: `${riseLeft}%`,
                 width: `${highlightWidth}%`,
                 background: colors.highlightIvory,
-                opacity: 0.3
+                opacity: 0.3,
               }}
             />
           )}
@@ -103,10 +125,12 @@ const TimelineScrollbar: React.FC<Props> = ({ date, minute, onChange }) => {
               )}
             </div>
           ))}
+        </div>
+        <div id="timeline-markers" className="absolute left-0 right-0" style={{ top: '70%' }}>
           {riseLeft !== null && riseLabel && (
             <div
               id="rise-marker"
-              className="absolute bottom-0 text-xs"
+              className="absolute text-xs"
               style={{ left: `${riseLeft}%`, transform: 'translateX(-50%)', color: colors.ivory }}
             >
               ↑ {riseLabel}
@@ -115,7 +139,7 @@ const TimelineScrollbar: React.FC<Props> = ({ date, minute, onChange }) => {
           {setLeft !== null && setLabel && (
             <div
               id="set-marker"
-              className="absolute bottom-0 text-xs"
+              className="absolute text-xs"
               style={{ left: `${setLeft}%`, transform: 'translateX(-50%)', color: colors.ivory }}
             >
               ↓ {setLabel}
@@ -127,7 +151,7 @@ const TimelineScrollbar: React.FC<Props> = ({ date, minute, onChange }) => {
         id="timeline-next"
         className="px-2 py-1 rounded"
         style={{ background: colors.navy00, color: colors.ivory }}
-        onClick={() => onChange((minute + 720) % 1440)}
+        onClick={() => animateMove(180)}
       >
         &gt;&gt;
       </button>
