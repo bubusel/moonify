@@ -15,25 +15,23 @@ const AppShell: React.FC = () => {
     <div id="app-shell" className="h-screen relative overflow-hidden">
       <SkyBackdrop minute={minute} />
       <div className="relative z-10 flex flex-col h-full">
-        <div className="flex-1" />
+        <h1
+          id="app-title"
+          className="absolute top-0 left-0 text-xl font-bold p-4"
+          style={{ color: colors.ivory }}
+        >
+          Moonify
+        </h1>
         <div
           id="main-content"
-          className="relative flex items-center justify-center"
-          style={{ height: '50vh' }}
+          className="relative flex flex-col items-center justify-center flex-1 w-full"
         >
-          <h1
-            id="app-title"
-            className="absolute top-0 left-0 text-xl font-bold p-4"
-            style={{ color: colors.ivory }}
-          >
-            Moonify
-          </h1>
           <NowPanel date={dateStr} minute={minute} />
         </div>
-        <div style={{ height: '10vh' }} className="flex items-center">
+        <div style={{ height: '10vh' }} className="flex items-center justify-center w-full">
           <TimelineScrollbar dateTime={dateTime} onChange={setDateTime} />
         </div>
-        <div style={{ height: '10vh' }} className="flex items-center">
+        <div style={{ height: '10vh' }} className="flex items-center justify-center w-full">
           <DatePickerHotkeys dateTime={dateTime} onChange={setDateTime} />
         </div>
       </div>

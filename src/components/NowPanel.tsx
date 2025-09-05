@@ -157,7 +157,7 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
   const moonColor = hslToString(colorHsl);
 
   return (
-    <div id="now-panel" className="flex flex-col items-center space-y-2">
+    <div id="now-panel" className="flex flex-col items-center space-y-2 w-3/5">
       <div
         id="moon-canvas"
         ref={canvasRef}
