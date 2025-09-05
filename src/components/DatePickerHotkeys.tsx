@@ -31,8 +31,8 @@ const DatePickerHotkeys: React.FC<Props> = ({ dateTime, onChange }) => {
             second: dateTime.second,
           }));
         }}
-        className="bg-navy00 text-textPrimary rounded px-2 py-1"
-        style={{ background: colors.navy00, color: colors.textPrimary, colorScheme: 'dark' }}
+        className="rounded px-2 py-1"
+        style={{ background: colors.navy10, color: colors.textPrimary, colorScheme: 'dark' }}
       />
       <input
         id="time-input"
@@ -43,19 +43,19 @@ const DatePickerHotkeys: React.FC<Props> = ({ dateTime, onChange }) => {
           const [h, m, s] = e.target.value.split(':').map(Number);
           onChange(dateTime.set({ hour: h, minute: m, second: s }));
         }}
-        className="bg-navy00 text-textPrimary rounded px-2 py-1"
-        style={{ background: colors.navy00, color: colors.textPrimary, colorScheme: 'dark' }}
+        className="rounded px-2 py-1"
+        style={{ background: colors.navy10, color: colors.textPrimary, colorScheme: 'dark' }}
       />
       <button
         id="btn-today"
         className="px-2 py-1 rounded"
-        style={{ background: colors.navy00, color: colors.ivory }}
+        style={{ background: colors.navy10, color: colors.ivory }}
         onClick={() => onChange(DateTime.now())}
       >Today</button>
       <button
         id="btn-tomorrow"
         className="px-2 py-1 rounded"
-        style={{ background: colors.navy00, color: colors.ivory }}
+        style={{ background: colors.navy10, color: colors.ivory }}
         onClick={() => onChange(DateTime.now().plus({ days: 1 }))}
       >Tomorrow</button>
     </div>

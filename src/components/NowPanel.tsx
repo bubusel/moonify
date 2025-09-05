@@ -2,14 +2,13 @@ import React from 'react';
 import { DateTime } from 'luxon';
 import { colors } from '../constants/colors';
 import MoonDisc from './MoonDisc';
-import { getMoon, toCompass } from '../lib/astro';
+import { getMoon } from '../lib/astro';
 import { clipDeg } from '../constants/config';
 
 interface Props {
   date: string;
   minute: number;
 }
-const sampleStep = 5; // minutes
 
 function hexToHsl(hex: string) {
   let r = 0, g = 0, b = 0;
@@ -68,67 +67,22 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
 
   const dayStart = React.useMemo(() => DateTime.fromISO(date).startOf('day'), [date]);
 
-  const samples = React.useMemo(() => {
-    const arr: { t: number; alt: number; az: number }[] = [];
-    for (let t = 0; t < 1440; t += sampleStep) {
-      const jsDate = dayStart.plus({ minutes: t }).toJSDate();
-      const { position } = getMoon(jsDate, 0, 0);
-      arr.push({ t, alt: (position.altitude * 180) / Math.PI, az: (position.azimuth * 180) / Math.PI });
-    }
-    return arr;
-  }, [dayStart]);
-
-  let tRise = 0;
-  let tSet = 1440;
-  let maxAlt = -90;
-
-  samples.forEach((s, i) => {
-    if (s.alt > maxAlt) {
-      maxAlt = s.alt;
-    }
-    if (i > 0) {
-      const prev = samples[i - 1];
-      if (prev.alt < 0 && s.alt >= 0) tRise = s.t;
-      if (prev.alt >= 0 && s.alt < 0 && tSet === 1440) tSet = prev.t;
-    }
-  });
-
-  const sampleMap = new Map(samples.map((s) => [s.t, s]));
-  const azRise = sampleMap.get(tRise)?.az ?? 0;
-  const azSet = sampleMap.get(tSet)?.az ?? 0;
-
-  const Wmax = dim.w * 0.9;
-  const Wmin = dim.w * 0.3;
-  const visibleSpan = tSet - tRise;
-  const L = Math.min(Wmax, Math.max(Wmin, (visibleSpan / 1440) * Wmax));
   const Cx = dim.w / 2;
-
   const baseDiameter = 64;
   const topMargin = baseDiameter / 2;
+  const maxAlt = 90; // assume zenith at 90° for vertical rise
 
   const mapAltToY = (alt: number) => {
     const scale = (dim.h - topMargin) / maxAlt;
     return dim.h - alt * scale;
   };
-
-  const xAt = (t: number) => {
-    const ratio = (t - tRise) / (tSet - tRise);
-    return Cx - L / 2 + ratio * L;
-  };
   const horizonY = mapAltToY(0);
-
-  const pathData = React.useMemo(() => {
-    const pts = samples
-      .filter((s) => s.t >= tRise && s.t <= tSet)
-      .map((s) => `${xAt(s.t)},${mapAltToY(s.alt)}`);
-    return pts.length ? `M ${pts.join(' L ')}` : '';
-  }, [samples, tRise, tSet, dim.w, dim.h]);
 
   const jsNow = dayStart.plus({ minutes: minute }).toJSDate();
   const { position, illumination } = getMoon(jsNow, 0, 0);
   const altDeg = (position.altitude * 180) / Math.PI;
   const visible = altDeg >= -clipDeg;
-  const x = xAt(minute);
+  const x = Cx;
   const y = mapAltToY(altDeg);
 
   const scale = 1 - 0.25 * Math.min(Math.max(altDeg / maxAlt, 0), 1);
@@ -163,9 +117,6 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
         ref={canvasRef}
         className="relative w-full h-full overflow-hidden"
       >
-        <svg className="absolute inset-0 w-full h-full" fill="none">
-          <path d={pathData} stroke={colors.gridLine} strokeWidth={1} />
-        </svg>
         <MoonDisc
           visible={visible}
           phase={illumination.phase}
@@ -178,22 +129,8 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
           clipDeg={clipDeg}
         />
       </div>
-      <div id="moon-info" className="relative w-full text-textMuted">
-        <div
-          className="absolute text-xs"
-          style={{ left: `${xAt(tRise)}px`, top: 0, transform: 'translateX(-50%)' }}
-        >
-          {toCompass(azRise)}
-        </div>
-        <div
-          className="absolute text-xs"
-          style={{ left: `${xAt(tSet)}px`, top: 0, transform: 'translateX(-50%)' }}
-        >
-          {toCompass(azSet)}
-        </div>
-        <div className="text-center">
-          Altitude: {altDeg.toFixed(2)}° | Phase: {(illumination.phase * 100).toFixed(1)}%
-        </div>
+      <div id="moon-info" className="w-full text-textMuted text-center">
+        Altitude: {altDeg.toFixed(2)}° | Phase: {(illumination.phase * 100).toFixed(1)}%
       </div>
     </div>
   );
