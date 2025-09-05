@@ -3,13 +3,12 @@ import { DateTime } from 'luxon';
 import { colors } from '../constants/colors';
 import MoonDisc from './MoonDisc';
 import { getMoon, toCompass } from '../lib/astro';
+import { clipDeg } from '../constants/config';
 
 interface Props {
   date: string;
   minute: number;
 }
-
-const clipDeg = 0.6;
 const sampleStep = 5; // minutes
 
 function hexToHsl(hex: string) {
@@ -81,13 +80,11 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
 
   let tRise = 0;
   let tSet = 1440;
-  let tPeak = 0;
   let maxAlt = -90;
 
   samples.forEach((s, i) => {
     if (s.alt > maxAlt) {
       maxAlt = s.alt;
-      tPeak = s.t;
     }
     if (i > 0) {
       const prev = samples[i - 1];
@@ -99,7 +96,6 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
   const sampleMap = new Map(samples.map((s) => [s.t, s]));
   const azRise = sampleMap.get(tRise)?.az ?? 0;
   const azSet = sampleMap.get(tSet)?.az ?? 0;
-  const azPeak = sampleMap.get(tPeak)?.az ?? 0;
 
   const Wmax = dim.w * 0.9;
   const Wmin = dim.w * 0.3;
@@ -107,12 +103,18 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
   const L = Math.min(Wmax, Math.max(Wmin, (visibleSpan / 1440) * Wmax));
   const Cx = dim.w / 2;
 
+  const baseDiameter = 64;
+  const topMargin = baseDiameter / 2;
+
   const mapAltToY = (alt: number) => {
-    const t = Math.min(Math.max(alt / maxAlt, -clipDeg / maxAlt), 1);
-    return dim.h - t * dim.h;
+    const scale = (dim.h - topMargin) / maxAlt;
+    return dim.h - alt * scale;
   };
 
-  const xAt = (t: number) => Cx + ((t - tPeak) / (tSet - tRise)) * L;
+  const xAt = (t: number) => {
+    const ratio = (t - tRise) / (tSet - tRise);
+    return Cx - L / 2 + ratio * L;
+  };
   const horizonY = mapAltToY(0);
 
   const pathData = React.useMemo(() => {
@@ -129,8 +131,7 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
   const x = xAt(minute);
   const y = mapAltToY(altDeg);
 
-  const scale = 1 - 0.15 * Math.min(Math.max(altDeg / maxAlt, 0), 1);
-  const baseDiameter = 64;
+  const scale = 1 - 0.25 * Math.min(Math.max(altDeg / maxAlt, 0), 1);
   const diameter = Math.max(0.05 * Math.min(dim.w, dim.h), baseDiameter * scale);
 
   const tAlt = Math.min(Math.max(altDeg / maxAlt, 0), 1);
@@ -176,27 +177,23 @@ const NowPanel: React.FC<Props> = ({ date, minute }) => {
           horizonY={horizonY}
           clipDeg={clipDeg}
         />
+      </div>
+      <div id="moon-info" className="relative w-full" style={{ color: colors.textMuted }}>
         <div
           className="absolute text-xs"
-          style={{ left: `${xAt(tRise)}px`, top: `${horizonY + 4}px`, transform: 'translateX(-50%)' }}
+          style={{ left: `${xAt(tRise)}px`, top: 0, transform: 'translateX(-50%)' }}
         >
           {toCompass(azRise)}
         </div>
         <div
           className="absolute text-xs"
-          style={{ left: `${xAt(tSet)}px`, top: `${horizonY + 4}px`, transform: 'translateX(-50%)' }}
+          style={{ left: `${xAt(tSet)}px`, top: 0, transform: 'translateX(-50%)' }}
         >
           {toCompass(azSet)}
         </div>
-        <div
-          className="absolute text-xs"
-          style={{ left: `${xAt(tPeak)}px`, top: `${mapAltToY(maxAlt) - 16}px`, transform: 'translateX(-50%)' }}
-        >
-          {toCompass(azPeak)}
+        <div className="text-center">
+          Altitude: {altDeg.toFixed(2)}° | Phase: {(illumination.phase * 100).toFixed(1)}%
         </div>
-      </div>
-      <div id="moon-info" style={{ color: colors.textMuted }}>
-        Altitude: {altDeg.toFixed(2)}° | Phase: {(illumination.phase * 100).toFixed(1)}%
       </div>
     </div>
   );
