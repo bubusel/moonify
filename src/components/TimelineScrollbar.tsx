@@ -10,6 +10,28 @@ interface Props {
   onChange: (m: number) => void;
 }
 
+const TimelineRange: React.FC<{ minute: number; onChange: (m: number) => void }> = ({ minute, onChange }) => {
+  const rafRef = React.useRef<number>();
+  React.useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => onChange(value));
+  };
+  return (
+    <input
+      id="timeline-range"
+      type="range"
+      min={0}
+      max={1439}
+      value={minute}
+      onChange={handleChange}
+      className="w-full absolute top-0 appearance-none bg-transparent"
+      style={{ accentColor: colors.ivory }}
+    />
+  );
+};
+
 function format(date: string, minute: number) {
   return DateTime.fromISO(date)
     .startOf('day')
@@ -51,16 +73,7 @@ const TimelineScrollbar: React.FC<Props> = ({ date, minute, onChange }) => {
         &lt;&lt;
       </button>
       <div className="relative flex-1 h-16">
-        <input
-          id="timeline-range"
-          type="range"
-          min={0}
-          max={1439}
-          value={minute}
-          onChange={e => onChange(Number(e.target.value))}
-          className="w-full absolute top-0 appearance-none bg-transparent"
-          style={{ accentColor: colors.ivory }}
-        />
+        <TimelineRange minute={minute} onChange={onChange} />
         <div id="selected-time-label" className="absolute -top-5 text-xs" style={{ left: `${handleLeft}%`, transform: 'translateX(-50%)', color: colors.ivory }}>
           {selectedLabel}
         </div>

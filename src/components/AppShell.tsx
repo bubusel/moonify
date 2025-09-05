@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import Header from './Header';
 import SkyBackdrop from './SkyBackdrop';
 import NowPanel from './NowPanel';
-import CycleChart from './CycleChart';
+// import CycleChart from './CycleChart';
 
 const AppShell: React.FC = () => {
   const now = DateTime.now();
@@ -22,7 +22,7 @@ const AppShell: React.FC = () => {
         />
         <main id="main-content" className="flex-1 p-4 space-y-8">
           <NowPanel date={date} minute={minutes} />
-          <CycleChart />
+          {/* <CycleChart /> */}
         </main>
       </div>
     </div>
